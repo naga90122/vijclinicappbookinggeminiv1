@@ -1,0 +1,123 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:13-alpine # Using a lightweight PostgreSQL image
+    restart: always
+    environment:
+      POSTGRES_DB: clinic_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432" # Expose DB port for local access if needed
+    volumes:
+      - db_data:/var/lib/postgresql/data # Persistent data volume
+
+  # Master Agent Service
+  master_agent:
+    build: .
+    command: uvicorn master_agent.main:app --host 0.0.0.0 --port 8000 --reload # --reload for development
+    volumes:
+      - .:/app # Mount current directory for live code changes (dev only)
+    ports:
+      - "8001:8000" # Expose Master Agent on a specific port
+    env_file:
+      - .env # Load environment variables
+    depends_on:
+      - db # Master agent depends on the database being up
+
+  # Manager Agent Service
+  manager_agent:
+    build: .
+    command: uvicorn manager_agent.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8002:8000" # Expose Manager Agent on a specific port
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  # Instruction Developer Agent Service
+  instruction_developer_agent:
+    build: .
+    command: uvicorn instruction_developer_agent.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8003:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  # QA Agent Service
+  qa_agent:
+    build: .
+    command: uvicorn qa_agent.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8004:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  # Scheduler Agent Service
+  scheduler_agent:
+    build: .
+    command: uvicorn scheduler_agent.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8005:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  # DB Agent Service
+  db_agent:
+    build: .
+    command: uvicorn db_agent.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8006:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  # Auth Agent Service
+  auth_agent:
+    build: .
+    command: uvicorn auth_agent.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8007:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+
+  # Voice Interface Service (can be a client or a lightweight proxy)
+  voice_interface:
+    build: .
+    command: uvicorn voice_interface.voice_handler:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8008:8000"
+    env_file:
+      - .env
+    # This might interact directly with master_agent
+    depends_on:
+      - master_agent
+
+volumes:
+  db_data: # Define the named volume for database persistence

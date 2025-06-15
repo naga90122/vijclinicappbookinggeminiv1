@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-dotenv
+httpx
+pydantic
+psycopg2-binary
+google-cloud-speech
+google-cloud-texttospeech
+# Additional libraries for NLU/LLM if needed beyond direct API calls
+# For password hashing (e.g., for auth_agent)
+bcrypt
+# For Ngrok if you want to control it programmatically
+# pyngrok
